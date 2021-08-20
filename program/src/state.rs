@@ -16,6 +16,7 @@ pub struct VestingScheduleHeader {
     pub destination_address: Pubkey,
     pub mint_address: Pubkey,
     pub is_initialized: bool,
+    pub admin_address: Pubkey,
 }
 
 impl Sealed for VestingScheduleHeader {}
@@ -26,6 +27,7 @@ impl Pack for VestingScheduleHeader {
     fn pack_into_slice(&self, target: &mut [u8]) {
         let destination_address_bytes = self.destination_address.to_bytes();
         let mint_address_bytes = self.mint_address.to_bytes();
+        let admin_address_bytes = self.admin_address.to_bytes();
         for i in 0..32 {
             target[i] = destination_address_bytes[i];
         }
@@ -35,6 +37,9 @@ impl Pack for VestingScheduleHeader {
         }
 
         target[64] = self.is_initialized as u8;
+        for i in 65..65+32 {
+            target[i] = admin_address_bytes[i - 32];
+        }
     }
 
     fn unpack_from_slice(src: &[u8]) -> Result<Self, ProgramError> {
@@ -44,10 +49,12 @@ impl Pack for VestingScheduleHeader {
         let destination_address = Pubkey::new(&src[..32]);
         let mint_address = Pubkey::new(&src[32..64]);
         let is_initialized = src[64] == 1;
+        let admin_address = Pubkey::new(&src[65..65+32]);
         Ok(Self {
             destination_address,
             mint_address,
             is_initialized,
+            admin_address
         })
     }
 }

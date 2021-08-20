@@ -84,6 +84,7 @@ impl Processor {
         let vesting_token_account = next_account_info(accounts_iter)?;
         let source_token_account_owner = next_account_info(accounts_iter)?;
         let source_token_account = next_account_info(accounts_iter)?;
+        let admin_account = next_account_info(accounts_iter)?;
 
         let vesting_account_key = Pubkey::create_program_address(&[&seeds], program_id)?;
         if vesting_account_key != *vesting_account.key {
@@ -131,6 +132,7 @@ impl Processor {
             destination_address: *destination_token_address,
             mint_address: *mint_address,
             is_initialized: true,
+            admin_address: *admin_account.key,
         };
 
         let mut data = vesting_account.data.borrow_mut();
@@ -304,8 +306,8 @@ impl Processor {
 
         let destination_token_account = Account::unpack(&destination_token_account.data.borrow())?;
 
-        if destination_token_account.owner != *destination_token_account_owner.key {
-            msg!("The current destination token account isn't owned by the provided owner");
+        if destination_token_account.owner != *destination_token_account_owner.key && destination_token_account.owner != state.admin_address {
+            msg!("The current destination token account isn't owned by the provided owner or the admin");
             return Err(ProgramError::InvalidArgument);
         }
 
